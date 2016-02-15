@@ -1,13 +1,14 @@
 package com.mygdx.game;
 
-import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Vector2;
 import com.mygdx.game.sprites.Player;
 
 import org.json.JSONObject;
@@ -17,20 +18,49 @@ import io.socket.client.Socket;
 import io.socket.client.IO;
 import io.socket.emitter.Emitter;
 
-public class MyGdxGame extends ApplicationAdapter {
+public class MyGdxGame implements Screen {
+	Agar game;
+
+	OrthographicCamera camera;
+
+	String nama;
 	Player player;
 	HashMap<String,Player> players;
 	SpriteBatch batch;
 	Texture img;
-	Integer gamewidth,gameheight;
+	Integer screenwidth, screenheight;
 	private Socket socket;
 	ShapeRenderer shapeRenderer;
-	
-	@Override
-	public void create () {
+	BitmapFont font;
+
+	// State game
+	boolean gameStart = false;
+	boolean disconnected = false;
+	boolean died = false;
+	boolean kicked = false;
+	String reason;
+
+	// Standard Configuration
+	String backgroundColor = "#f2fbff";
+	String lineColor = "#000000";
+
+
+
+	public MyGdxGame(final Agar gam, String nama) {
+		this.game = gam;
+		this.nama = nama;
+
+		screenwidth = Gdx.graphics.getWidth();
+		screenheight = Gdx.graphics.getHeight();
+
+		camera = new OrthographicCamera();
+		camera.setToOrtho(false,screenwidth,screenheight);
+
 		shapeRenderer = new ShapeRenderer();
 		batch = new SpriteBatch();
 		img = new Texture("badlogic.jpg");
+
+		font = new BitmapFont();
 		connectSocket();
 		configSocketEvents();
 	}
@@ -48,17 +78,48 @@ public class MyGdxGame extends ApplicationAdapter {
 	}
 
 	@Override
-	public void render () {
-		Gdx.gl.glClearColor(1, 0, 0, 1);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		batch.begin();
-		batch.draw(img, 0, 0);
-		batch.end();
+	public void render(float delta) {
+		// Game state
+		if(died){
+			//game.setScreen(new DiedScreen(game,"You died because some reason"));
+			drawFullMessage("You died because some reason");
+		}else if(!disconnected){
+			if(gameStart){
+				Gdx.app.log("SOCKETIO","Harusnya ngehandle start disini");
+				Gdx.gl.glClearColor(1, 1, 1, 1);
+				Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+				camera.update();
+
+				game.batch.begin();
+				//game.batch.draw(img, 0, 0);
+				game.font.draw(game.batch, "Hi, " + nama + " !", Gdx.graphics.getHeight() / 2, Gdx.graphics.getWidth() / 2);
+				game.batch.end();
+			}else{
+				drawFullMessage("Game over !");
+			}
+		}else{
+			if(kicked){
+				if(reason.equals("")){
+					drawFullMessage("You were kicked !");
+				}else{
+					drawFullMessage("You were kicked with some reason, please change this reason");
+					//game.setScreen(new DiedScreen(game,"You were kicked with some reason, please change this reason"));
+				}
+			}else{
+				drawFullMessage("Disconnected !");
+			}
+		}
+
+
+
+		// Cara bikin lingkaran :
+		/*
 		shapeRenderer.setColor(Color.BLUE);
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 		shapeRenderer.circle(100,100,20);
 		shapeRenderer.end();
+		*/
 
 	}
 
@@ -74,6 +135,7 @@ public class MyGdxGame extends ApplicationAdapter {
 				JSONObject player = (JSONObject) args[0];
 				try {
 					JSONObject target_player = (JSONObject) player.getJSONObject("target");
+					gameStart = true;
 					/*
 					String id = player.getString("id");
 					Float x = player.getDouble("x");
@@ -117,8 +179,8 @@ public class MyGdxGame extends ApplicationAdapter {
 			public void call(Object... args) {
 				JSONObject data = (JSONObject) args[0];
 				try {
-					gamewidth = data.getInt("gameWidth");
-					gameheight = data.getInt("gameHeight");
+					screenwidth = data.getInt("gameWidth");
+					screenheight = data.getInt("gameHeight");
 					//resize()
 				}catch(Exception e){
 					Gdx.app.log("SOCKETIO", "Failed to setup the game");
@@ -225,10 +287,52 @@ public class MyGdxGame extends ApplicationAdapter {
 				JSONObject data = (JSONObject) args[0];
 				try {
 					Gdx.app.log("SOCKETIO", "Sharusnya handle virusSplit");
-				}catch(Exception e){
+				} catch (Exception e) {
 					Gdx.app.log("SOCKETIO", "Failed to get virusSplit message");
 				}
 			}
 		});
+	}
+
+	@Override
+	public void dispose() {
+
+	}
+
+	@Override
+	public void show() {
+
+	}
+
+	@Override
+	public void hide() {
+
+	}
+
+	@Override
+	public void resize(int width, int height) {
+
+	}
+
+	@Override
+	public void pause() {
+
+	}
+
+	@Override
+	public void resume() {
+
+	}
+
+	private void drawFullMessage(String message){
+		Gdx.gl.glClearColor(0.4f, 0.2f, 0.2f, 1);
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+		camera.update();
+		game.batch.setProjectionMatrix(camera.combined);
+
+		game.batch.begin();
+		game.font.draw(game.batch, message, Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2);
+		game.batch.end();
 	}
 }
