@@ -25,14 +25,25 @@ public class Player{
     public Integer screenWidth;
     public Integer screenHeight;
     public Long lastSplit;
+    public float xoffset;
+    public float yoffset;
+
+    public Player(){
+        this.id = null;
+        this.name = null;
+        previousposition = new Vector2(getX(),getY());
+    }
 
     public Player(String id, String name, Double x,Double y){
         this.id = id;
         this.name = name;
         this.x = x;
         this.y = y;
+        this.xoffset = 0;
+        this.yoffset = 0;
         previousposition = new Vector2(getX(),getY());
     }
+
 
     public boolean hasmoved(){
         Vector2 target = new Vector2((float) target_x,(float) target_y);
@@ -155,6 +166,22 @@ public class Player{
 
     public void setLastSplit(Long lastSplit) {
         this.lastSplit = lastSplit;
+    }
+
+    public float getXoffset() {
+        return xoffset;
+    }
+
+    public void setXoffset(float xoffset) {
+        this.xoffset = xoffset;
+    }
+
+    public float getYoffset() {
+        return yoffset;
+    }
+
+    public void setYoffset(float yoffset) {
+        this.yoffset = yoffset;
     }
 
     @Override
