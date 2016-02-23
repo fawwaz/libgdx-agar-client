@@ -61,6 +61,9 @@ public class MyGdxGame implements Screen {
 	double spin;
 	double enemyspin;
 
+	// Just for test ioio
+	public boolean is_on;
+
 	public MyGdxGame(final Agar gam, String nama) {
 		this.game = gam;
 		this.nama = nama;
@@ -82,6 +85,9 @@ public class MyGdxGame implements Screen {
 
 		spin = -Math.PI;
 		enemyspin = -Math.PI;
+
+		// Just for test ioio
+		is_on = false;
 
 		font = new BitmapFont();
 		connectSocket();
@@ -624,8 +630,10 @@ public class MyGdxGame implements Screen {
 			Vector3 touchpos = new Vector3();
 			touchpos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
 			camera.unproject(touchpos);
+			is_on = true;
 			the_player_target.set(touchpos.x-Gdx.graphics.getWidth()/2,Gdx.graphics.getHeight()/2-touchpos.y);
 		}
+		is_on = false;
 	}
 
 	private void drawfoods() {
@@ -639,13 +647,14 @@ public class MyGdxGame implements Screen {
 	}
 
 	private void drawFood(Food food){
-		shapeRenderer.setColor(Color.RED);
+		float[] rgb = hsvToRgb(food.getHue(),100,100);
+		shapeRenderer.setColor(rgb[0],rgb[1],rgb[2],100);
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 		shapeRenderer.circle((int) (food.getX() - the_player.getX() + Gdx.graphics.getWidth()/2) ,(int) (the_player.getY() - food.getY() + Gdx.graphics.getHeight() /2 ) , food.getRadius().intValue());
 		shapeRenderer.end();
 	}
 
-	private drawPlayers(Array<OrderMass> order){
+	private void drawPlayers(Array<OrderMass> order){
 		Vector2 start = new Vector2();
 		start.x = the_player.getX() - (Gdx.graphics.getWidth()/2);
 		start.y = the_player.getY() - (Gdx.graphics.getHeight()/2);
@@ -697,7 +706,7 @@ public class MyGdxGame implements Screen {
 	}
 
 	private int valueinRange(double min, double max, double value){
-		return Math.min(max,Math.max(min,value));
+		return Math.min((int) max,Math.max((int) min,(int) value));
 	}
 
 	/**
